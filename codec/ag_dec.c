@@ -18,6 +18,8 @@
  * @APPLE_APACHE_LICENSE_HEADER_END@
  */
 
+/* Modified by Orca; see ORCA-CHANGES. */
+
 /*
 	File:		ag_dec.c
 	
