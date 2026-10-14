@@ -96,7 +96,7 @@ void unpc_block( int32_t * pc1, int32_t * out, int32_t num, int16_t * coefs, int
 		return;
 	}
 
-	for ( j = 1; j <= numactive; j++ )
+	for ( j = 1; j <= numactive && j < num; j++ )
 	{
 		del = pc1[j] + out[j-1];
 		out[j] = (del << chanshift) >> chanshift;
