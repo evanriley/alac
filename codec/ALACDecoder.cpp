@@ -624,6 +624,12 @@ NoMoreChannels:
 				Zero16( fill16, numSamples, numChannels );
 				break;
 			}
+			case 20:
+			{
+				uint8_t *	fill20 = (uint8_t *)sampleBuffer + (channelIndex * 3);
+				Zero24( fill20, numSamples, numChannels );
+				break;
+			}
 			case 24:
 			{
 				uint8_t *	fill24 = (uint8_t *)sampleBuffer + (channelIndex * 3);
