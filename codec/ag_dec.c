@@ -289,7 +289,7 @@ int32_t dyn_decomp( AGParamRecPtr params, BitBuffer * bitstream, int32_t * pc, i
 
 	in = bitstream->cur;
 	startPos = bitstream->bitIndex;
-	maxPos = bitstream->byteSize * 8;
+	maxPos = ( in < bitstream->end ) ? (uint32_t)( bitstream->end - in ) * 8 : 0;
 	bitPos = startPos;
 
     mb = params->mb0;

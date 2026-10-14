@@ -267,19 +267,21 @@ int32_t ALACDecoder::Decode( BitBuffer * bits, uint8_t * sampleBuffer, uint32_t 
 					headerByte	= (uint8_t) BitBufferRead( bits, 8 );
 					modeU		= headerByte >> 4;
 					denShiftU	= headerByte & 0xfu;
-					
+
 					headerByte	= (uint8_t) BitBufferRead( bits, 8 );
 					pbFactorU	= headerByte >> 5;
 					numU		= headerByte & 0x1fu;
 
 					for ( i = 0; i < numU; i++ )
 						coefsU[i] = (int16_t) BitBufferRead( bits, 16 );
-					
+					RequireAction( bits->cur <= bits->end, status = kALAC_ParamError; goto Exit; );
+
 					// if shift active, skip the the shift buffer but remember where it starts
 					if ( bytesShifted != 0 )
 					{
 						shiftBits = *bits;
-						BitBufferAdvance( bits, (bytesShifted * 8) * numSamples ); 
+						BitBufferAdvance( bits, (bytesShifted * 8) * numSamples );
+						RequireAction( bits->cur <= bits->end, status = kALAC_ParamError; goto Exit; );
 					}
 
 					// decompress
@@ -304,6 +306,10 @@ int32_t ALACDecoder::Decode( BitBuffer * bits, uint8_t * sampleBuffer, uint32_t 
 
 					// uncompressed frame, copy data into the mix buffer to use common output code
 					shift = 32 - chanBits;
+					{
+						uint64_t availBits = ( bits->cur < bits->end ) ? ( (uint64_t)( bits->end - bits->cur ) * 8 ) - bits->bitIndex : 0;
+						RequireAction( (uint64_t) numSamples * chanBits <= availBits, status = kALAC_ParamError; goto Exit; );
+					}
 					if ( chanBits <= 16 )
 					{
 						for ( i = 0; i < numSamples; i++ )
@@ -436,12 +442,14 @@ int32_t ALACDecoder::Decode( BitBuffer * bits, uint8_t * sampleBuffer, uint32_t 
 					numV		= headerByte & 0x1fu;
 					for ( i = 0; i < numV; i++ )
 						coefsV[i] = (int16_t) BitBufferRead( bits, 16 );
+					RequireAction( bits->cur <= bits->end, status = kALAC_ParamError; goto Exit; );
 
 					// if shift active, skip the interleaved shifted values but remember where they start
 					if ( bytesShifted != 0 )
 					{
 						shiftBits = *bits;
 						BitBufferAdvance( bits, (bytesShifted * 8) * 2 * numSamples );
+						RequireAction( bits->cur <= bits->end, status = kALAC_ParamError; goto Exit; );
 					}
 
 					// decompress and run predictor for "left" channel
@@ -483,6 +491,10 @@ int32_t ALACDecoder::Decode( BitBuffer * bits, uint8_t * sampleBuffer, uint32_t 
 					// uncompressed frame, copy data into the mix buffers to use common output code
 					chanBits = mConfig.bitDepth;
 					shift = 32 - chanBits;
+					{
+						uint64_t availBits = ( bits->cur < bits->end ) ? ( (uint64_t)( bits->end - bits->cur ) * 8 ) - bits->bitIndex : 0;
+						RequireAction( (uint64_t) numSamples * 2 * chanBits <= availBits, status = kALAC_ParamError; goto Exit; );
+					}
 					if ( chanBits <= 16 )
 					{
 						for ( i = 0; i < numSamples; i++ )
@@ -588,6 +600,7 @@ int32_t ALACDecoder::Decode( BitBuffer * bits, uint8_t * sampleBuffer, uint32_t 
 				// frame end, all done so byte align the frame and check for overruns
 				BitBufferByteAlign( bits, false );
 				//Assert( bits->cur == bits->end );
+				RequireAction( bits->cur <= bits->end, status = kALAC_ParamError; );
 				goto Exit;
 			}
 		}
