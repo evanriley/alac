@@ -247,12 +247,14 @@ int32_t ALACDecoder::Decode( BitBuffer * bits, uint8_t * sampleBuffer, uint32_t 
 				escapeFlag = headerByte & 0x1;
 
 				chanBits = mConfig.bitDepth - (bytesShifted * 8);
-				
+				RequireAction( chanBits >= 1 && chanBits <= 32, status = kALAC_ParamError; goto Exit; );
+
 				// check for partial frame to override requested numSamples
 				if ( partialFrame != 0 )
 				{
 					numSamples  = BitBufferRead( bits, 16 ) << 16;
 					numSamples |= BitBufferRead( bits, 16 );
+					RequireAction( numSamples >= 1 && numSamples <= mConfig.frameLength, status = kALAC_ParamError; goto Exit; );
 				}
 
 				if ( escapeFlag == 0 )
@@ -398,12 +400,14 @@ int32_t ALACDecoder::Decode( BitBuffer * bits, uint8_t * sampleBuffer, uint32_t 
 				escapeFlag = headerByte & 0x1;
 
 				chanBits = mConfig.bitDepth - (bytesShifted * 8) + 1;
-				
+				RequireAction( chanBits >= 1 && chanBits <= 32, status = kALAC_ParamError; goto Exit; );
+
 				// check for partial frame length to override requested numSamples
 				if ( partialFrame != 0 )
 				{
 					numSamples  = BitBufferRead( bits, 16 ) << 16;
 					numSamples |= BitBufferRead( bits, 16 );
+					RequireAction( numSamples >= 1 && numSamples <= mConfig.frameLength, status = kALAC_ParamError; goto Exit; );
 				}
 
 				if ( escapeFlag == 0 )
@@ -411,6 +415,7 @@ int32_t ALACDecoder::Decode( BitBuffer * bits, uint8_t * sampleBuffer, uint32_t 
 					// compressed frame, read rest of parameters
 					mixBits		= (uint8_t) BitBufferRead( bits, 8 );
 					mixRes		= (int8_t) BitBufferRead( bits, 8 );
+					RequireAction( mixBits <= 31, status = kALAC_ParamError; goto Exit; );
 
 					headerByte	= (uint8_t) BitBufferRead( bits, 8 );
 					modeU		= headerByte >> 4;
